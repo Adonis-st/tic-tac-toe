@@ -3,7 +3,7 @@ import { gameModeAtom, markAtom } from "@/store";
 
 export const NewGame = () => {
 	const [mark, setMark] = useAtom(markAtom);
-	const [gameMode, setGamemode] = useAtom(gameModeAtom);
+	const [, setGamemode] = useAtom(gameModeAtom);
 
 	return (
 		<div className="mt-28">
@@ -18,7 +18,7 @@ export const NewGame = () => {
 					<button
 						onClick={() => setMark("x")}
 						className={`${
-							mark ? "bg-silver fill-dark_navy" : "fill-silver"
+							mark === "x" ? "bg-silver fill-dark_navy" : "fill-silver"
 						} choose-mark-btn`}>
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" className="w-8 h-8">
 							<path
@@ -31,7 +31,7 @@ export const NewGame = () => {
 					<button
 						onClick={() => setMark("o")}
 						className={`${
-							mark ? "fill-silver" : "bg-silver fill-dark_navy"
+							mark === "o" ? "bg-silver fill-dark_navy" : "fill-silver"
 						} choose-mark-btn  `}>
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" className=" h-8 w-8 ">
 							<path d="M32 0c17.673 0 32 14.327 32 32 0 17.673-14.327 32-32 32C14.327 64 0 49.673 0 32 0 14.327 14.327 0 32 0Zm0 18.963c-7.2 0-13.037 5.837-13.037 13.037 0 7.2 5.837 13.037 13.037 13.037 7.2 0 13.037-5.837 13.037-13.037 0-7.2-5.837-13.037-13.037-13.037Z" />

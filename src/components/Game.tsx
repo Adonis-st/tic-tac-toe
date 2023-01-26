@@ -1,53 +1,99 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { GameModal } from "./GameModal";
+import { calculateWinner, checkTie } from "@/utils/helper";
+import { gameModeAtom } from "@/store";
+import { useAtom } from "jotai";
 
 export const Game = () => {
+	const [gameMode, setGamemode] = useAtom(gameModeAtom);
 	const [currentTurn, setCurrentTurn] = useState("x");
 	const [boxes, setBoxes] = useState(["", "", "", "", "", "", "", "", ""]);
 
-	const markBoard = (boxIndex: number) => {
-		if (boxes[boxIndex] === "") {
-			const turn = currentTurn === "x" ? "x" : "o";
-			setBoxes((prevState) => prevState.map((box, index) => (index === boxIndex ? turn : box)));
-		}
+	const [score, setScore] = useState({ x: 0, ties: 0, o: 0 });
 
-		setCurrentTurn((prevState) => (prevState === "x" ? "o" : "x"));
-	};
-
-	const calculateWinner = (squares: any) => {
-		const lines = [
-			[0, 1, 2],
-			[3, 4, 5],
-			[6, 7, 8],
-			[0, 3, 6],
-			[1, 4, 7],
-			[2, 5, 8],
-			[0, 4, 8],
-			[2, 4, 6],
-		];
-
-		for (let i = 0; i < lines.length; i++) {
-			const [a, b, c] = lines[i];
-			if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-				return squares[a];
-			}
-		}
-		return null;
-	};
+	const [openModal, setOpenModal] = useState(false);
 
 	const winner = calculateWinner(boxes);
+
+	const tie = checkTie(boxes);
+
+	const home = () => {
+		restartGame();
+		setGamemode("");
+	};
+
+	const cpuTurn = () => {
+		if (gameMode === "cpu") {
+		}
+	};
+
+	const markBoard = (boxIndex: number) => {
+		if (boxes[boxIndex] === "" && !winner) {
+			const turn = currentTurn === "x" ? "x" : "o";
+
+			// Add mark to the box
+			setBoxes((prevState) => prevState.map((box, index) => (index === boxIndex ? turn : box)));
+
+			// Swiches the mark
+			setCurrentTurn((prevState) => (prevState === "x" ? "o" : "x"));
+		}
+	};
+
 	const reset = () => {
 		setBoxes(["", "", "", "", "", "", "", "", ""]);
 		setCurrentTurn("x");
+		setOpenModal(false);
 	};
+
+	const restartGame = () => {
+		setBoxes(["", "", "", "", "", "", "", "", ""]);
+		setCurrentTurn("x");
+		setScore({ x: 0, ties: 0, o: 0 });
+		setOpenModal(false);
+	};
+
+	useEffect(() => {
+		if (winner || tie) {
+			setOpenModal(true);
+
+			if (winner === "x") {
+				setScore((prevState) => ({
+					...prevState,
+					x: prevState.x++,
+				}));
+			} else if (winner === "o") {
+				setScore((prevState) => ({
+					...prevState,
+					o: prevState.o++,
+				}));
+			}
+
+			if (tie) {
+				setScore((prevState) => ({
+					...prevState,
+					ties: prevState.ties++,
+				}));
+			}
+		}
+	}, [winner, tie]);
 
 	return (
 		<div className="mt-5">
+			{openModal && (
+				<GameModal
+					setOpenModal={setOpenModal}
+					winner={winner}
+					reset={reset}
+					tie={tie}
+					restartGame={restartGame}
+				/>
+			)}
 			<div className="flex items-center justify-between">
-				<div className="flex ">
+				<button onClick={() => home()} className="flex">
 					<img src="assets/icon-x.svg" alt="X" className="w-8 h-8 mr-2" />
 					<img src="assets/icon-o.svg" alt="o" className="w-8 h-8" />
-				</div>
-				{winner && <div>{winner === "x" ? "x wins" : "o wins"}</div>}
+				</button>
+
 				<div className="flex items-center bg-semi_dark_navy shadow-[inset_0px_-4px_0px_#10212A] rounded-md px-3 pt-2 pb-3 ">
 					{currentTurn === "x" && (
 						<svg
@@ -72,7 +118,7 @@ export const Game = () => {
 				</div>
 
 				<button
-					onClick={() => reset()}
+					onClick={() => setOpenModal(true)}
 					className="bg-silver px-[.625rem] pb-[.75rem] pt-[.5rem] rounded-lg shadow-[inset_0px_-4px_0px_#6B8997]">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" className="w-4 h-4 ">
 						<path
@@ -82,7 +128,8 @@ export const Game = () => {
 					</svg>
 				</button>
 			</div>
-			<div className="grid grid-cols-3 grid-rows-3 gap-4 mt-10 ">
+
+			<div className="grid grid-cols-3 grid-rows-3 gap-4 mt-16 ">
 				{boxes.map((box, index) => {
 					return (
 						<button
@@ -112,6 +159,29 @@ export const Game = () => {
 						</button>
 					);
 				})}
+			</div>
+
+			<div className="mt-6 flex justify-between  items-center ">
+				<div className="bg-light_blue rounded-lg flex flex-col items-center justify-center px-[1.85rem] py-2 w-[96px] h-[64px]">
+					<span className="text-dark_navy font-medium text-[.75rem] tracking-[.75px]">
+						x &#40;P2&#41;
+					</span>
+					<span className="text-[1.25rem] font-bold tracking-[1.25px]">{score.x}</span>
+				</div>
+
+				<div className="bg-silver rounded-lg flex flex-col items-center justify-center px-[1.85rem] py-2 w-[96px] h-[64px]">
+					<span className="text-dark_navy font-medium text-[.75rem] tracking-[.75px]">
+						Ties
+					</span>
+					<span className="text-[1.25rem] font-bold tracking-[1.25px]">{score.ties}</span>
+				</div>
+
+				<div className="bg-light_yellow rounded-lg flex flex-col items-center justify-center px-[1.85rem] py-2 w-[96px] h-[64px]">
+					<span className="text-dark_navy font-medium text-[.75rem] tracking-[.75px]">
+						0 &#40;P1&#41;
+					</span>
+					<span className="text-[1.25rem] font-bold tracking-[1.25px]">{score.o}</span>
+				</div>
 			</div>
 		</div>
 	);
